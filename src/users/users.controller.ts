@@ -1,9 +1,10 @@
-import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
-import { ApiResponse, ApiUseTags, ApiImplicitParam } from '@nestjs/swagger';
-import { CreateUserDTO, UserLoginDTO } from './dto/user.dto';
+import { ApiResponse, ApiUseTags, ApiImplicitParam, ApiBearerAuth } from '@nestjs/swagger';
+import { CreateUserDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
 import { IUser } from './interfaces/user.interface';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiUseTags('users')
 @Controller('users')
@@ -40,11 +41,25 @@ export class UsersController {
       throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
     }
     const checkedUser = await this.authService.validateUser(user.email, user.password);
-    // console.log(checkedUser);
     if (!checkedUser) {
       throw new UnauthorizedException();
     }
     return await this.authService.login(checkedUser);
+  }
+
+  @Put()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiResponse({ status: 200, description: 'Success ```{ statusCode: 200, message: "Update was successful"}```' })
+  @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Bad request" }```' })
+  @ApiResponse({ status: 401, description: 'Error Exception ```{ statusCode: 401, message: "Unauthorized" }```' })
+  async updateUser(@Body() user: UpdateUserDTO, @Request() req): Promise<Object> {
+    if (await this.usersService.updateUser(req.user.userId, user) ) {
+      return {
+        statusCode: 200,
+        message: 'Update was successful',
+      };
+    }
   }
 
   @Get(':id')
