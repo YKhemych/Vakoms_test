@@ -24,3 +24,16 @@ export class CreateUserDTO {
   @ApiModelProperty()
   readonly password: string;
 }
+
+export class UserLoginDTO {
+
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiModelProperty()
+  readonly email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiModelProperty()
+  readonly password: string;
+}
