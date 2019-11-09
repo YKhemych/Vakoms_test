@@ -54,4 +54,10 @@ export class UsersController {
   getOneById(@Param('id') id: number): Promise<IUser> {
     return this.usersService.getOneByParams({ id });
   }
+
+  @Get()
+  @ApiResponse({ status: 200, description: 'List of Users'})
+  getAll(): Promise<IUser[]> {
+    return this.usersService.getAll();
+  }
 }

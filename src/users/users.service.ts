@@ -25,4 +25,8 @@ export class UsersService {
   async getOneByParams(params: object): Promise<IUser> {
     return await this.userRepository.findOne(params);
   }
+
+  async getAll(): Promise<IUser[]> {
+    return await this.userRepository.find();
+  }
 }
