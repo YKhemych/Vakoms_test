@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Vakoms API')
     .setVersion('1.0')
     .addTag('users')
+    .addBearerAuth('Authorization', 'header')
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
