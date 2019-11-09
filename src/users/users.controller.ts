@@ -1,8 +1,9 @@
-import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
-import { ApiResponse, ApiUseTags } from '@nestjs/swagger';
+import { ApiResponse, ApiUseTags, ApiImplicitParam } from '@nestjs/swagger';
 import { CreateUserDTO, UserLoginDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
+import { IUser } from './interfaces/user.interface';
 
 @ApiUseTags('users')
 @Controller('users')
@@ -44,5 +45,13 @@ export class UsersController {
       throw new UnauthorizedException();
     }
     return await this.authService.login(checkedUser);
+  }
+
+  @Get(':id')
+  @ApiImplicitParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'User Object'})
+  @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "Not found" }```' })
+  getOneById(@Param('id') id: number): Promise<IUser> {
+    return this.usersService.getOneByParams({ id });
   }
 }
