@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { getRepository } from 'typeorm';
 import { User } from '../users/user.entity';
 import * as bcrypt from 'bcrypt';
@@ -21,14 +21,14 @@ export class AuthService {
     if (user && isSame) {
       return user;
     } else {
-      return null;
+      throw new HttpException('Password is wrong', HttpStatus.CONFLICT);
     }
   }
 
-  async login(user: any): Promise<{accessToken: string}> {
+  async login(user: any): Promise<{status: number, accessToken: string}> {
     const payload = { email: user.user_email, userId: user.user_id };
     const accessToken = await this.jwtService.sign(payload);
-    return { accessToken };
+    return { status: 200, accessToken };
   }
 
   async resetPassword(email: string): Promise<string> {

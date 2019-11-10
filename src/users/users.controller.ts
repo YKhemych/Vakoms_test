@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { ApiResponse, ApiUseTags, ApiImplicitParam, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
@@ -31,16 +31,13 @@ export class UsersController {
   }
 
   @Post('login')
-  @ApiResponse({ status: 200, description: 'Success ```{ accessToken: generated JWT token```' })
+  @ApiResponse({ status: 200, description: 'Success ```{ statusCode: 200, accessToken: generated JWT token```' })
   @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Bad request" }```' })
-  @ApiResponse({ status: 401, description: 'Error Exception ```{ statusCode: 401, error: "Unauthorized" }```' })
   @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "User with this email does not exist" }```' })
+  @ApiResponse({ status: 409, description: 'Error Exception ```{ statusCode: 409, error: "Password is wrong" }```' })
   async login(@Body() user: UserLoginDTO): Promise<Object> {
     await this.usersService.checkUserByEmail(user.email);
     const checkedUser = await this.authService.validateUser(user.email, user.password);
-    if (!checkedUser) {
-      throw new UnauthorizedException();
-    }
     return await this.authService.login(checkedUser);
   }
 
