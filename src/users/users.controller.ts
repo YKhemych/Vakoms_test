@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpStatus, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { ApiResponse, ApiUseTags, ApiImplicitParam, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateUserDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
+import { CreateUserDTO, ForgotEmailDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
 import { IUser } from './interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -56,12 +56,13 @@ export class UsersController {
     }
   }
 
-  @Put('forgot/:email')
-  @ApiImplicitParam({ name: 'email', type: String })
-  async forgotPassword(@Param('email') email: string) {
-    await this.usersService.checkUserByEmail( email);
-    const token = await this.authService.resetPassword(email);
-    await this.usersService.sendEmail(email, token);
+  @Post('forgot/:email')
+  @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Bad request" }```' })
+  @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "User with this email does not exist" }```' })
+  async forgotPassword(@Body() obj: ForgotEmailDTO) {
+    await this.usersService.checkUserByEmail( obj.email);
+    const token = await this.authService.resetPassword(obj.email);
+    await this.usersService.sendEmail(obj.email, token);
   }
 
   @Put('reset/:token')

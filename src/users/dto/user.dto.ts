@@ -64,3 +64,11 @@ export class UpdatePasswordDTO {
   @ApiModelProperty()
   confirmPassword: string;
 }
+
+export class ForgotEmailDTO {
+
+  @IsEmail()
+  @IsNotEmpty()
+  @ApiModelProperty()
+  readonly email: string;
+}
