@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
-import { AuthService } from 'src/auth/auth.service';
+import { AuthService } from '../auth/auth.service';
 import { ApiResponse, ApiUseTags, ApiImplicitParam, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateUserDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
+import { CreateUserDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
 import { IUser } from './interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -36,10 +36,7 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Error Exception ```{ statusCode: 401, error: "Unauthorized" }```' })
   @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "User with this email does not exist" }```' })
   async login(@Body() user: UserLoginDTO): Promise<Object> {
-    const userFromDB = await this.usersService.getOneByParams({ email: user.email });
-    if (!userFromDB) {
-      throw new HttpException('User with this email does not exist', HttpStatus.NOT_FOUND);
-    }
+    await this.usersService.checkUserByEmail(user.email);
     const checkedUser = await this.authService.validateUser(user.email, user.password);
     if (!checkedUser) {
       throw new UnauthorizedException();
@@ -55,6 +52,31 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Error Exception ```{ statusCode: 401, message: "Unauthorized" }```' })
   async updateUser(@Body() user: UpdateUserDTO, @Request() req): Promise<Object> {
     if (await this.usersService.updateUser(req.user.userId, user) ) {
+      return {
+        statusCode: 200,
+        message: 'Update was successful',
+      };
+    }
+  }
+
+  @Put('forgot/:email')
+  @ApiImplicitParam({ name: 'email', type: String })
+  async forgotPassword(@Param('email') email: string) {
+    await this.usersService.checkUserByEmail( email);
+    const token = await this.authService.resetPassword(email);
+    await this.usersService.sendEmail(email, token);
+  }
+
+  @Put('reset/:token')
+  @ApiImplicitParam({ name: 'token', type: String })
+  async resetPassword(@Param('token') token: string, @Body() user: UpdatePasswordDTO) {
+    const email = await this.authService.decode(token);
+    await this.usersService.checkUserByEmail( email);
+    if (user.password !== user.confirmPassword) {
+      throw new HttpException('Confirmed password is wrong', HttpStatus.BAD_REQUEST);
+    }
+    const userFromDB = await this.usersService.getOneByParams({email});
+    if (await this.usersService.updatePassword(userFromDB.id, user)) {
       return {
         statusCode: 200,
         message: 'Update was successful',

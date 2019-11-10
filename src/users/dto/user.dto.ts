@@ -50,3 +50,17 @@ export class UpdateUserDTO {
   @ApiModelProperty()
   readonly lastName: string;
 }
+
+export class UpdatePasswordDTO {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @ApiModelProperty()
+  password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  @ApiModelProperty()
+  confirmPassword: string;
+}

@@ -30,4 +30,14 @@ export class AuthService {
     const accessToken = await this.jwtService.sign(payload);
     return { accessToken };
   }
+
+  async resetPassword(email: string): Promise<string> {
+    const payload = { email };
+    const token = await this.jwtService.sign(payload);
+    return token;
+  }
+
+  async decode(token: string): Promise<string> {
+    return JSON.parse(JSON.stringify(await this.jwtService.decode(token))).email;
+  }
 }
