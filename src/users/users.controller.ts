@@ -67,6 +67,9 @@ export class UsersController {
 
   @Put('reset/:token')
   @ApiImplicitParam({ name: 'token', type: String })
+  @ApiResponse({ status: 200, description: 'Success ```{ statusCode: 200, message: "Update was successful"}```' })
+  @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Confirmed password is wrong" }```' })
+  @ApiResponse({ status: 409, description: 'Error Exception ```{ statusCode: 409, error: "Token is wrong" }```' })
   async resetPassword(@Param('token') token: string, @Body() user: UpdatePasswordDTO) {
     const email = await this.authService.decode(token);
     await this.usersService.checkUserByEmail( email);

@@ -38,6 +38,10 @@ export class AuthService {
   }
 
   async decode(token: string): Promise<string> {
-    return JSON.parse(JSON.stringify(await this.jwtService.decode(token))).email;
+    const obj = JSON.parse(JSON.stringify(await this.jwtService.decode(token)));
+    if (!obj) {
+      throw new HttpException('Token is wrong', HttpStatus.CONFLICT);
+    }
+    return obj.email;
   }
 }
