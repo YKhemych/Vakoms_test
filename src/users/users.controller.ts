@@ -1,7 +1,7 @@
-import { Controller, Post, Body, HttpStatus, UnauthorizedException, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, HttpException, Get, Param, UseGuards, Put, Request } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { ApiResponse, ApiUseTags, ApiImplicitParam, ApiBearerAuth } from '@nestjs/swagger';
-import { CreateUserDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
+import { CreateUserDTO, ForgotEmailDTO, UpdatePasswordDTO, UpdateUserDTO, UserLoginDTO } from './dto/user.dto';
 import { UsersService } from './users.service';
 import { IUser } from './interfaces/user.interface';
 import { AuthGuard } from '@nestjs/passport';
@@ -31,16 +31,13 @@ export class UsersController {
   }
 
   @Post('login')
-  @ApiResponse({ status: 200, description: 'Success ```{ accessToken: generated JWT token```' })
+  @ApiResponse({ status: 200, description: 'Success ```{ statusCode: 200, accessToken: generated JWT token```' })
   @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Bad request" }```' })
-  @ApiResponse({ status: 401, description: 'Error Exception ```{ statusCode: 401, error: "Unauthorized" }```' })
   @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "User with this email does not exist" }```' })
+  @ApiResponse({ status: 409, description: 'Error Exception ```{ statusCode: 409, error: "Password is wrong" }```' })
   async login(@Body() user: UserLoginDTO): Promise<Object> {
     await this.usersService.checkUserByEmail(user.email);
     const checkedUser = await this.authService.validateUser(user.email, user.password);
-    if (!checkedUser) {
-      throw new UnauthorizedException();
-    }
     return await this.authService.login(checkedUser);
   }
 
@@ -59,16 +56,20 @@ export class UsersController {
     }
   }
 
-  @Put('forgot/:email')
-  @ApiImplicitParam({ name: 'email', type: String })
-  async forgotPassword(@Param('email') email: string) {
-    await this.usersService.checkUserByEmail( email);
-    const token = await this.authService.resetPassword(email);
-    await this.usersService.sendEmail(email, token);
+  @Post('forgot/:email')
+  @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Bad request" }```' })
+  @ApiResponse({ status: 404, description: 'Error Exception ```{ statusCode: 404, message: "User with this email does not exist" }```' })
+  async forgotPassword(@Body() obj: ForgotEmailDTO) {
+    await this.usersService.checkUserByEmail( obj.email);
+    const token = await this.authService.resetPassword(obj.email);
+    await this.usersService.sendEmail(obj.email, token);
   }
 
   @Put('reset/:token')
   @ApiImplicitParam({ name: 'token', type: String })
+  @ApiResponse({ status: 200, description: 'Success ```{ statusCode: 200, message: "Update was successful"}```' })
+  @ApiResponse({ status: 400, description: 'Error Exception ```{ statusCode: 400, message: "Confirmed password is wrong" }```' })
+  @ApiResponse({ status: 409, description: 'Error Exception ```{ statusCode: 409, error: "Token is wrong" }```' })
   async resetPassword(@Param('token') token: string, @Body() user: UpdatePasswordDTO) {
     const email = await this.authService.decode(token);
     await this.usersService.checkUserByEmail( email);

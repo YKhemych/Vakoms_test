@@ -6,7 +6,7 @@ import { CreateUserDTO, UpdatePasswordDTO, UpdateUserDTO } from './dto/user.dto'
 import { IUser } from './interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nest-modules/mailer';
-import { mailerConfig } from '../config/mailer.config';
+import { mailSettings } from '../config/mailer.config';
 
 @Injectable()
 export class UsersService {
@@ -43,7 +43,7 @@ export class UsersService {
       .mailerService
       .sendMail({
         to: email,
-        from: mailerConfig.email,
+        from: mailSettings.email,
         subject: 'Reset password',
         html: `<b>If you want to reset your password. It's your token ${token}</b>`,
       })
